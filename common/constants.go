@@ -4,12 +4,13 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var StartTime = time.Now()
@@ -64,6 +65,7 @@ var (
 	P2PPort      = flag.Int("p2p-port", 9377, "Specify the P2P listening port.")
 	LogDir       = flag.String("log-dir", "", "Specify the directory for log files.")
 	PrintHelp    = flag.Bool("help", false, "Print usage information.")
+	EnableWebDAV = flag.Bool("enable-webdav", true, "Enable WebDAV server.")
 )
 
 // UploadPath Maybe override by ENV_VAR

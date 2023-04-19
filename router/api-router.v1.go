@@ -1,13 +1,19 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"go-file/controller"
+	"go-file/davserver"
 	"go-file/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func setApiRouter(router *gin.Engine) {
 	router.Use(middleware.GlobalAPIRateLimit())
+
+	// set WebDAV
+	davserver.GetFromAPI(router.Group("/webdav"))
+
 	router.GET("/status", controller.GetStatus)
 	router.POST("/api/file", middleware.FileUploadPermissionCheck(), controller.UploadFile)
 	router.POST("/api/image", middleware.ImageUploadPermissionCheck(), controller.UploadImage)

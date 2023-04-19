@@ -2,17 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-contrib/sessions/redis"
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"go-file/common"
+	"go-file/davserver"
 	"go-file/model"
 	"go-file/router"
 	"html/template"
 	"os"
 	"strconv"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 func loadTemplate() *template.Template {
@@ -85,6 +87,10 @@ func main() {
 	if *common.EnableP2P {
 		go common.StartP2PServer()
 	}
+	if *common.EnableWebDAV {
+		go davserver.InitWebDAV()
+	}
+
 	err = server.Run(":" + realPort)
 	if err != nil {
 		common.FatalLog(err)
