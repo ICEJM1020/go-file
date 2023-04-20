@@ -1,11 +1,13 @@
 package middleware
 
 import (
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"go-file/common"
 	"go-file/model"
 	"net/http"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 func WebAuth() func(c *gin.Context) {
@@ -113,6 +115,46 @@ func NoTokenAuth() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
+		c.Next()
+	}
+}
+
+func WebDAVAuth() func(c *gin.Context) {
+	return func(c *gin.Context) {
+
+		// session := sessions.Default(c)
+		// username := session.Get("username")
+		// password := session.Get("password")
+		username, password, ok := c.Request.BasicAuth()
+		role := -1
+		id := -1
+		common.SysLog(fmt.Sprintf("WebDAV User: %s", username))
+		if !ok {
+			c.Writer.Header().Set("WWW-Authenticate", "Basic realm='timbergofile'")
+			c.Status((http.StatusUnauthorized))
+			c.Abort()
+			return
+		}
+		// Check token
+		// password := c.Request.Header.Get("password")
+		user := model.ValidateUserPassword(username, password)
+		if user != nil && user.Username != "" {
+			// Token is valid
+			username = user.Username
+			role = user.Role
+			id = user.Id
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"message": "无权进行此操作，未登录或 password error",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", username)
+		c.Set("role", role)
+		c.Set("id", id)
 		c.Next()
 	}
 }

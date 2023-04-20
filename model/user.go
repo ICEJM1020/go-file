@@ -1,8 +1,9 @@
 package model
 
 import (
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"strings"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type User struct {
@@ -16,20 +17,17 @@ type User struct {
 }
 
 func (user *User) Insert() error {
-	var err error
-	err = DB.Create(user).Error
+	err := DB.Create(user).Error
 	return err
 }
 
 func (user *User) Update() error {
-	var err error
-	err = DB.Model(user).Updates(user).Error
+	err := DB.Model(user).Updates(user).Error
 	return err
 }
 
 func (user *User) Delete() error {
-	var err error
-	err = DB.Delete(user).Error
+	err := DB.Delete(user).Error
 	return err
 }
 
@@ -48,6 +46,21 @@ func ValidateUserToken(token string) (user *User) {
 	user = &User{}
 	if DB.Where("token = ?", token).First(user).RowsAffected == 1 {
 		return user
+	}
+	return nil
+}
+
+func ValidateUserPassword(username string, password string) (user *User) {
+	if password == "" || username == "" {
+		return nil
+	}
+	// password = strings.Replace(password, "Bearer ", "", 1)
+	user = &User{}
+	if DB.Where("username = ?", username).First(user).RowsAffected == 1 {
+		if user.Password == password {
+			return user
+		}
+		return nil
 	}
 	return nil
 }

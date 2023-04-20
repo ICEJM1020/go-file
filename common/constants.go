@@ -82,7 +82,7 @@ var SessionSecret = uuid.New().String()
 var SQLitePath = ".go-file.db"
 
 func printHelp() {
-	fmt.Println(fmt.Sprintf("Go File %s - A simple file sharing tool.", Version))
+	fmt.Printf("Go File %s - A simple file sharing tool.\n", Version)
 	fmt.Println("Copyright (C) 2023 JustSong. All rights reserved.")
 	fmt.Println("GitHub: https://github.com/songquanpeng/go-file")
 	fmt.Println("Usage: go-file [options]")

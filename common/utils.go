@@ -97,6 +97,7 @@ func Seconds2Time(num int) (time string) {
 }
 
 func Interface2String(inter interface{}) string {
+
 	switch inter.(type) {
 	case string:
 		return inter.(string)
