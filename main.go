@@ -26,6 +26,7 @@ func loadTemplate() *template.Template {
 }
 
 func main() {
+
 	common.SetupGinLog()
 	common.SysLog(fmt.Sprintf("Go File %s started at port %d", common.Version, *common.Port))
 	if os.Getenv("GIN_MODE") != "debug" {
@@ -95,4 +96,5 @@ func main() {
 	if err != nil {
 		common.FatalLog(err)
 	}
+
 }

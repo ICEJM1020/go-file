@@ -11,6 +11,13 @@ COPY . .
 RUN go mod download
 RUN go build -ldflags "-s -w -X 'go-file/common.Version=$(cat VERSION)' -extldflags '-static'" -o go-file
 
+# Get Aria2 Pro
+FROM p3terx/s6-alpine
+
+RUN apk add --no-cache jq findutils curl && \
+    curl -fsSL git.io/aria2c.sh | bash && \
+    rm -rf /var/cache/apk/* /tmp/*
+
 # Final stage
 FROM alpine
 

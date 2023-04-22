@@ -1,4 +1,4 @@
-# Based On:()
+# Based On: [songquanpeng/go-file](https://github.com/songquanpeng/go-file), RESPECT!
 
 <p align="center">
   <a href="https://github.com/songquanpeng/go-file"><img src="https://user-images.githubusercontent.com/39998050/108494937-1a573e80-72e3-11eb-81c3-5545d7c2ed6e.jpg" width="200" height="200" alt="go-file"></a>
@@ -48,7 +48,10 @@ _✨ 文件分享工具，仅单个可执行文件，开箱即用，可用于局
 
 # TimberVersion
 
-## 
+## New Features
+1. WebDAV support, now available for Infuse. Need a account, if you want, set a 'webdav' acount for WebDAV only.
+\[TO-DO\]
+2. Offline download using Aria2-Pro (Thanks to https://github.com/P3TERX/Aria2-Pro-Docker)
 
 
 

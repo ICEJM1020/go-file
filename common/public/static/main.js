@@ -3,9 +3,17 @@ let hiddenTextArea = undefined;
 function showUploadModal() {
     if (location.href.split('/')[3].startsWith("explorer")) {
         let path = getPathParam();
-        document.getElementById('uploadFileDialogTitle').innerText = `上传文件到 "${path}"`;
+        document.getElementById('uploadFileDialogTitle').innerText = `Upload File to "${path}"`;
     }
     showModal('uploadModal');
+}
+
+function showServerDownloadModal() {
+    if (location.href.split('/')[3].startsWith("explorer")) {
+        let path = getPathParam();
+        document.getElementById('uploadFileDialogTitle').innerText = `Download File to "${path}"`;
+    }
+    showModal('serverdownloadModal');
 }
 
 function getPathParam() {
@@ -17,10 +25,6 @@ function getPathParam() {
     }
     if (path === "") path = "/";
     return path;
-}
-
-function closeUploadModal() {
-    document.getElementById('uploadModal').className = "modal";
 }
 
 
@@ -122,7 +126,7 @@ function uploadFile() {
     if (files.length === 0 && description === "") {
         return;
     }
-    closeUploadModal();
+    closeModal('uploadModal');
     let formData = new FormData();
     for (let i = 0; i < files.length; i++) {
         formData.append("file", files[i]);
@@ -168,6 +172,49 @@ function uploadFile() {
     fileUploader.open("POST", "/api/file");
     fileUploader.send(formData);
 }
+
+function SeverDownload() {
+    let saveurl = document.getElementById("serverdownloadurl").value;
+    if (saveurl.length === 0 && description === "") {
+        return;
+    }
+    if (!isValidUrl(saveurl) && !isValidMagnet(saveurl)) {
+        alert("Not a valid link!")
+        return;
+    }
+    closeModal('serverdownloadModal');
+    let formData = new FormData();
+    formData.append("saveurl", saveurl);
+
+    let path = "";
+    if (location.href.split('/')[3].startsWith("explorer")) {
+        path = getPathParam();
+    }
+    formData.append("path", path);
+
+    let urlUploader = new XMLHttpRequest();
+    urlUploader.addEventListener("load", ev => {
+        alert("Create Successful");
+        if (urlUploader.status === 403) {
+            location.href = "/login";
+        } else {
+            location.reload();
+        }
+    }, false);
+    urlUploader.addEventListener("error", ev => {
+        if (urlUploader.status === 403) {
+            location.href = "/login";
+        } else {
+            fileUploadTitle.innerText = `Download Fialed`;
+        }
+        console.error(ev);
+    }, false);
+    
+    urlUploader.open("POST", "/api/severdownload");
+    urlUploader.send(formData);
+}
+
+
 
 function dropHandler(ev) {
     ev.preventDefault();
@@ -476,5 +523,24 @@ function init() {
     hiddenTextArea.style.cssText = "height: 0px; width: 0px";
     document.body.appendChild(hiddenTextArea);
 }
+
+function isValidUrl(string) {
+    try {
+      url = new URL(string);
+      console.log(url)
+      return url.protocol === "http:" || url.protocol === "https:";;
+    } catch (err) {
+      return false;
+    }
+}
+
+function isValidMagnet(string){
+    if (string.match(/magnet:\?xt=urn:[a-z0-9]+:[a-z0-9]{32}/i) === null){
+        return false
+    }
+    return true
+}
+
+  
 
 document.addEventListener('DOMContentLoaded', init)

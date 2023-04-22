@@ -36,10 +36,11 @@ const (
 )
 
 var (
-	FileUploadPermission    = RoleGuestUser
-	FileDownloadPermission  = RoleGuestUser
-	ImageUploadPermission   = RoleGuestUser
-	ImageDownloadPermission = RoleGuestUser
+	FileUploadPermission      = RoleGuestUser
+	FileDownloadPermission    = RoleGuestUser
+	ImageUploadPermission     = RoleGuestUser
+	ImageDownloadPermission   = RoleGuestUser
+	ServerDowanloadPermission = RoleGuestUser
 )
 
 var (

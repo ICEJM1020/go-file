@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
 	"go-file/common"
 	"go-file/model"
 	"net/http"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 func permissionCheckHelper(c *gin.Context, requiredPermission int) {
@@ -73,5 +74,11 @@ func FileDownloadPermissionCheck() func(c *gin.Context) {
 func FileUploadPermissionCheck() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		permissionCheckHelper(c, common.FileUploadPermission)
+	}
+}
+
+func ServerDownloadPermissionCheck() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		permissionCheckHelper(c, common.ServerDowanloadPermission)
 	}
 }

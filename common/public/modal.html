@@ -1,6 +1,6 @@
 {{define "modal"}}
     <div class="modal" id="uploadModal" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
-        <div class="modal-background" onclick="closeUploadModal()"></div>
+        <div class="modal-background" onclick="closeModal('uploadModal')"></div>
         <div class="modal-content">
             <div class="box">
                 <h3 class="title is-5" id="uploadFileDialogTitle">选择文件或者拖拽文件上传...</h3>
@@ -27,6 +27,31 @@
 <!--                        </button>-->
                         <button class="button is-light" onclick="uploadFile()">上传
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="serverdownloadModal" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+        <div class="modal-background" onclick="closeModal('serverdownloadModal')"></div>
+        <div class="modal-content">
+            <div class="box">
+                <h3 class="title is-5" id="uploadFileDialogTitle">Offline Download</h3>
+                <form method="post" action="/severdownload" enctype="multipart/form-data">
+                    <div class="field">
+                        <label class="label">Url:</label>
+                        <div class="control">
+                            <textarea class="textarea" id="serverdownloadurl" name="description" placeholder="enter download url here"></textarea>
+                        </div>
+                    </div>
+                </form>
+                <div class="field is-grouped is-grouped-right">
+                    <div class="control">
+                        <button class="button is-light" onclick="closeModal('serverdownloadModal')">取消</button>
+                    </div>
+                    <div class="control">
+                        <button class="button is-light" onclick="SeverDownload()">Confirm</button>
                     </div>
                 </div>
             </div>
