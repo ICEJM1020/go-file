@@ -2,10 +2,11 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"go-file/common"
 	"go-file/model"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetOptions(c *gin.Context) {
