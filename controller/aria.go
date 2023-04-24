@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"go-file/common"
+	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -11,8 +13,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ariaDownload(saveURL, savePath string) {
-	_ = exec.Command("aria2c", fmt.Sprintf("--dir=%s", savePath), saveURL).Start()
+func ariaDownload(saveURL, savePath string) (err error) {
+
+	ariaCmd := exec.Command("/aria2c", fmt.Sprintf("--dir=%s", savePath), saveURL)
+	ariaCmd.Stderr = os.Stderr
+	err = ariaCmd.Start()
+	return err
 }
 
 func ServerDowanload(c *gin.Context) {
@@ -37,7 +43,13 @@ func ServerDowanload(c *gin.Context) {
 		}
 	}
 
-	ariaDownload(saveurl, uploadPath)
+	err := ariaDownload(saveurl, uploadPath)
+	if err != nil {
+		message := "Failed to create offline download" + err.Error()
+		common.SysError(message)
+		c.String(http.StatusInternalServerError, message)
+		return
+	}
 	// uploader := c.GetString("username")
 	// if uploader == "" {
 	// 	uploader = "匿名用户"
