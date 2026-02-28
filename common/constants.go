@@ -66,9 +66,9 @@ var (
 	PrintHelp    = flag.Bool("help", false, "Print usage information.")
 )
 
-// UploadPath Maybe override by ENV_VAR
+// UploadPath is now same as ExplorerRootPath (set by --path flag)
 var UploadPath = "upload"
-var ExplorerRootPath = UploadPath
+var ExplorerRootPath = "upload"
 var ImageUploadPath = "upload/images"
 var VideoServePath = "upload"
 
@@ -111,20 +111,29 @@ func init() {
 	if os.Getenv("SQLITE_PATH") != "" {
 		SQLitePath = os.Getenv("SQLITE_PATH")
 	}
-	if os.Getenv("UPLOAD_PATH") != "" {
-		UploadPath = os.Getenv("UPLOAD_PATH")
-		ExplorerRootPath = UploadPath
-		ImageUploadPath = path.Join(UploadPath, "images")
-		VideoServePath = UploadPath
-	}
+
+	// --path flag sets both ExplorerRootPath and UploadPath
 	if *Path != "" {
 		ExplorerRootPath = *Path
+		UploadPath = *Path // Now UploadPath is same as ExplorerRootPath
 	}
+
+	// UPLOAD_PATH env is now ignored when --path is set
+	// But we still support it for backwards compatibility when --path is not set
+	if *Path == "" && os.Getenv("UPLOAD_PATH") != "" {
+		UploadPath = os.Getenv("UPLOAD_PATH")
+		ExplorerRootPath = UploadPath
+	}
+
 	if *VideoPath != "" {
 		VideoServePath = *VideoPath
 	}
 
+	// Set ImageUploadPath based on UploadPath
+	ImageUploadPath = path.Join(UploadPath, "images")
+
 	ExplorerRootPath, _ = filepath.Abs(ExplorerRootPath)
+	UploadPath, _ = filepath.Abs(UploadPath)
 	VideoServePath, _ = filepath.Abs(VideoServePath)
 	ImageUploadPath, _ = filepath.Abs(ImageUploadPath)
 

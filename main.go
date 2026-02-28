@@ -72,7 +72,7 @@ func main() {
 	if realPort == "" {
 		realPort = strconv.Itoa(*common.Port)
 	}
-	if *common.Host == "" {
+	if *common.Host == "" { 
 		ip := common.GetIp()
 		if ip != "" {
 			*common.Host = ip

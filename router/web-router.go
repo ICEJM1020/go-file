@@ -11,14 +11,13 @@ func setWebRouter(router *gin.Engine) {
 	router.Use(middleware.GlobalWebRateLimit())
 	// Always available
 	// All page must have username in context
-	router.GET("/", middleware.ExtractUserInfo(), controller.GetIndexPage)
+	router.GET("/", middleware.ExtractUserInfo(), middleware.FileDownloadPermissionCheck(), controller.GetExplorerPageOrFile)
 	router.GET("/public/static/:file", controller.GetStaticFile)
 	router.GET("/public/lib/:file", controller.GetLibFile)
 	router.GET("/public/icon/:file", controller.GetIconFile)
 	router.GET("/login", middleware.ExtractUserInfo(), controller.GetLoginPage)
 	router.POST("/login", middleware.CriticalRateLimit(), controller.Login)
 	router.GET("/logout", controller.Logout)
-	router.GET("/help", middleware.ExtractUserInfo(), controller.GetHelpPage)
 
 	// Download files
 	fileDownloadAuth := router.Group("/")
@@ -34,7 +33,12 @@ func setWebRouter(router *gin.Engine) {
 		imageDownloadAuth.Static("/image", common.ImageUploadPath)
 	}
 
-	router.GET("/image", middleware.ExtractUserInfo(), controller.GetImagePage)
+	// Chat room - requires login
+	chatAuth := router.Group("/")
+	chatAuth.Use(middleware.WebAuth())
+	{
+		chatAuth.GET("/chat", controller.GetChatPage)
+	}
 
 	router.GET("/video", middleware.ExtractUserInfo(), controller.GetVideoPage)
 

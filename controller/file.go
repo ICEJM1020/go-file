@@ -66,30 +66,35 @@ func UploadFile(c *gin.Context) {
 		}
 		files = append(files, file)
 	}
-	t := time.Now()
-	subfolder := t.Format("2006-01")
-	err = common.MakeDirIfNotExist(filepath.Join(uploadPath, subfolder))
+
+	// Create upload directory if not exists
+	err = common.MakeDirIfNotExist(uploadPath)
 	if err != nil {
 		common.SysError("failed to create folder: " + err.Error())
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+
+	t := time.Now()
 	for _, file := range files {
 		// In case someone wants to upload to other folders.
 		filename := filepath.Base(file.Filename)
-		link := fmt.Sprintf("%s/%s", subfolder, filename)
-		savePath := filepath.Join(uploadPath, subfolder, filename)
+		link := filename
+		savePath := filepath.Join(uploadPath, filename)
+
+		// Handle file name conflict
 		if _, err := os.Stat(savePath); err == nil {
 			// File already existed.
 			timestamp := t.Format("_2006-01-02_15-04-05")
 			ext := filepath.Ext(filename)
 			if ext == "" {
-				link += timestamp
+				link = filename + timestamp
 			} else {
-				link = subfolder + "/" + filename[:len(filename)-len(ext)] + timestamp + ext
+				link = filename[:len(filename)-len(ext)] + timestamp + ext
 			}
 			savePath = filepath.Join(uploadPath, link)
 		}
+
 		if createTextFile {
 			// Create a new text file and then write the description to it.
 			filename = "文本分享"

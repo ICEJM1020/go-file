@@ -40,6 +40,7 @@ func InitDB() (db *gorm.DB, err error) {
 		db.AutoMigrate(&Image{})
 		db.AutoMigrate(&User{})
 		db.AutoMigrate(&Option{})
+		db.AutoMigrate(&ChatMessage{})
 		createAdminAccount()
 		return DB, err
 	} else {

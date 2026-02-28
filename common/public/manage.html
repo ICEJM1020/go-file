@@ -45,6 +45,7 @@
                                                     <a>系统状况</a></li>
                                                 <li id="userTabList" class="tab" onclick="openTab(this,'userTab')"><a>账户管理</a></li>
                                                 <li id="fileTabList" class="tab" onclick="openTab(this,'fileTab')"><a>文件管理</a></li>
+                                                <li id="chatTabList" class="tab" onclick="openTab(this,'chatTab')"><a>聊天室</a></li>
                                                 <li id="settingTabList" class="tab" onclick="openTab(this,'settingTab')"><a>系统设置</a></li>
                                                 {{else}}
                                                 <li id="userTabList" class="tab" onclick="openTab(this,'userTab')"><a>账户管理</a>
@@ -367,6 +368,40 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        {{if .isAdmin}}
+                                        <div id="chatTab" class="content-tab" style="display: none;">
+                                            <h3>聊天室管理</h3>
+                                            <div class="box">
+                                                <div class="content">
+                                                    <p>清空聊天记录将删除数据库中的所有聊天消息，但不会删除已上传的文件。</p>
+                                                    <p><strong>注意：</strong>此操作不可恢复，请谨慎操作。</p>
+                                                </div>
+                                                <a class="button is-danger" onclick="clearChatMessages()">
+                                                    清空聊天记录
+                                                </a>
+                                            </div>
+                                            <script>
+                                                async function clearChatMessages() {
+                                                    if (!confirm('确定要清空所有聊天记录吗？此操作不可恢复！')) {
+                                                        return;
+                                                    }
+                                                    try {
+                                                        const res = await fetch('/api/chat/clear', {
+                                                            method: 'DELETE'
+                                                        });
+                                                        const data = await res.json();
+                                                        if (data.success) {
+                                                            showToast('聊天记录已清空');
+                                                        } else {
+                                                            showToast(data.message || '清空失败');
+                                                        }
+                                                    } catch (e) {
+                                                        showToast('清空失败');
+                                                    }
+                                                }
+                                            </script>
+                                        </div>
+                                        {{end}}
                                         <div id="settingTab" class="content-tab" style="display: none;">
                                             <div class="columns">
                                                 <div class="column">

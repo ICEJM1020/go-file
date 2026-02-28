@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+{{template "header" .}}
+<body>
+<div>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="normal-container">
+            <article id="messageToast" class="message is-danger" style="display: none">
+                <div class="message-body" id="messageToastText">
+                </div>
+            </article>
+            
+            <div class="box">
+                <div class="chat-container" style="height: 55vh; overflow-y: auto; padding: 1rem;" id="chatMessages">
+                    <!-- Messages will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="box">
+                <div class="field">
+                    <label class="label is-small">上传路径</label>
+                    <div class="control">
+                        <input class="input is-small" type="text" id="uploadPath" placeholder="留空则上传到根目录，或输入相对路径如: folder/subfolder">
+                    </div>
+                </div>
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" type="text" id="messageInput" placeholder="输入消息..." autofocus>
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" onclick="sendMessage()">发送</button>
+                    </div>
+                    <div class="control">
+                        <div class="file is-primary">
+                            <label class="file-label">
+                                <input class="file-input" type="file" id="fileInput" onchange="uploadFile()">
+                                <span class="file-cta">
+                                    <span class="file-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="file-label">上传</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{template "footer" .}}
+</div>
+
+<style>
+.chat-message {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    max-width: 80%;
+}
+.chat-message.own {
+    background-color: #3273dc;
+    color: white;
+    margin-left: auto;
+}
+.chat-message.other {
+    background-color: #f5f5f5;
+    color: #333;
+}
+.chat-message .username {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.8;
+}
+.chat-message .time {
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+    opacity: 0.6;
+}
+.chat-message img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 4px;
+}
+.chat-message .file-link {
+    color: inherit;
+    text-decoration: underline;
+}
+</style>
+
+<script>
+let lastTimestamp = 0;
+let username = "{{.username}}";
+let displayedMessageIds = new Set(); // Track displayed message IDs to prevent duplicates
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp * 1000);
+    return date.getHours().toString().padStart(2, '0') + ':' + 
+           date.getMinutes().toString().padStart(2, '0');
+}
+
+function addMessage(msg, skipDuplicateCheck = false) {
+    // Check for duplicate messages by ID
+    if (!skipDuplicateCheck && msg.id && displayedMessageIds.has(msg.id)) {
+        return; // Already displayed this message
+    }
+    
+    // Mark as displayed
+    if (msg.id) {
+        displayedMessageIds.add(msg.id);
+    }
+    
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'chat-message ' + (msg.username === username ? 'own' : 'other');
+    
+    let content = '';
+    if (msg.type === 'text') {
+        content = `<div class="text">${escapeHtml(msg.content)}</div>`;
+    } else if (msg.type === 'image') {
+        content = `<img src="${msg.file_url}" alt="image" onclick="window.open('${msg.file_url}', '_blank')">`;
+    } else if (msg.type === 'file') {
+        content = `<a class="file-link" href="${msg.file_url}" download="${escapeHtml(msg.file_name)}" target="_blank">📎 ${escapeHtml(msg.file_name)}</a>`;
+    }
+    
+    div.innerHTML = `
+        <div class="username">${escapeHtml(msg.username)}</div>
+        ${content}
+        <div class="time">${formatTime(msg.timestamp)}</div>
+    `;
+    
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    
+    if (msg.timestamp > lastTimestamp) {
+        lastTimestamp = msg.timestamp;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function loadMessages() {
+    try {
+        const res = await fetch('/api/chat/messages');
+        const data = await res.json();
+        if (data.success) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            displayedMessageIds.clear(); // Clear tracked IDs on reload
+            data.data.forEach(msg => addMessage(msg));
+        }
+    } catch (e) {
+        console.error('Failed to load messages:', e);
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    if (!content) return;
+    
+    try {
+        const res = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        const data = await res.json();
+        if (data.success) {
+            addMessage(data.data); // This will be displayed immediately
+            input.value = '';
+        }
+    } catch (e) {
+        console.error('Failed to send message:', e);
+    }
+}
+
+async function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files[0]) return;
+    
+    // Get upload path from input
+    const uploadPath = document.getElementById('uploadPath').value.trim();
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('path', uploadPath); // Pass the path to backend
+    
+    try {
+        const res = await fetch('/api/chat/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            addMessage(data.data); // This will be displayed immediately
+        } else {
+            alert(data.message || '上传失败');
+        }
+    } catch (e) {
+        console.error('Failed to upload file:', e);
+    }
+    
+    fileInput.value = '';
+}
+
+async function pollMessages() {
+    try {
+        const res = await fetch(`/api/chat/poll?last=${lastTimestamp}`);
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+            data.data.forEach(msg => addMessage(msg)); // Will skip duplicates via ID check
+        }
+    } catch (e) {
+        console.error('Poll error:', e);
+    }
+    setTimeout(pollMessages, 1000);
+}
+
+// Handle enter key
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// Initialize: get path from URL parameter if available
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const path = urlParams.get('path');
+    if (path) {
+        document.getElementById('uploadPath').value = path;
+    }
+})();
+
+// Initialize
+loadMessages();
+setTimeout(pollMessages, 1000);
+</script>
+
+{{template "modal"}}
+{{template "notice" .}}
+
+</body>
+</html>
