@@ -1,29 +1,35 @@
 {{define "modal"}}
-<div class="modal" id="uploadModal" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+<div class="modal" id="uploadModal">
     <div class="modal-background" onclick="closeUploadModal()"></div>
     <div class="modal-content">
         <div class="box">
-            <h3 class="title is-5" id="uploadFileDialogTitle">选择文件或者拖拽文件上传...</h3>
-            <form method="post" action="/upload" enctype="multipart/form-data">
+            <h3 class="title is-5" id="uploadFileDialogTitle">拖拽文件到下方区域或点击选择文件</h3>
+            <form id="uploadForm" method="post" action="/api/file" enctype="multipart/form-data" onsubmit="event.preventDefault(); uploadFile();">
                 <input class="mdui-btn mdui-ripple" id="fileInput" type="file" name="file" multiple="" required=""
                        style="display: none" onchange="onFileInputChange()">
-                <div class="field">
-                    <label class="label">描述信息</label>
-                    <div class="control">
-                        <textarea class="textarea" id="fileUploadDescription" name="description" placeholder="请在此处输入描述信息，如果不选择文件进行上传，系统将根据此处的描述信息自动创建文本文件"></textarea>
+                <div class="drop-zone" id="dropZone" 
+                     ondrop="dropHandler(event);" 
+                     ondragover="dragOverHandler(event);"
+                     ondragleave="dragLeaveHandler(event);"
+                     onclick="onChooseBtnClicked(event)">
+                    <div class="drop-zone-content">
+                        <p class="has-text-grey">
+                            <span class="icon is-large">
+                                <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                            </span>
+                        </p>
+                        <p class="has-text-grey mt-2">拖拽文件到此处</p>
+                        <p class="has-text-grey is-size-7">或点击选择文件</p>
                     </div>
                 </div>
                 <input id='submitBtn' type="submit" name="Upload" style="display: none">
             </form>
-            <div class="field is-grouped is-grouped-right">
-                <div class="control">
-                    <button class="button is-light" onclick="onChooseBtnClicked()">选择</button>
-                </div>
+            <div class="field is-grouped is-grouped-right mt-4">
                 <div class="control">
                     <button class="button is-light" onclick="closeUploadModal()">取消</button>
                 </div>
                 <div class="control">
-                    <button class="button is-light" onclick="uploadFile()">上传
+                    <button class="button is-info" onclick="uploadFile()" id="uploadBtn" disabled>上传
                     </button>
                 </div>
             </div>

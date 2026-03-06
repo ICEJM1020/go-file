@@ -35,8 +35,8 @@ func (user *User) Delete() error {
 
 func (user *User) ValidateAndFill() {
 	// When querying with struct, GORM will only query with non-zero fields,
-	// that means if your field’s value is 0, '', false or other zero values,
-	// it won’t be used to build query conditions
+	// that means if your field's value is 0, '', false or other zero values,
+	// it won't be used to build query conditions
 	DB.Where(&user).First(&user)
 }
 
@@ -50,4 +50,12 @@ func ValidateUserToken(token string) (user *User) {
 		return user
 	}
 	return nil
+}
+
+// GetAllUsers returns all users from the database
+func GetAllUsers() ([]*User, error) {
+	var users []*User
+	var err error
+	err = DB.Find(&users).Error
+	return users, err
 }

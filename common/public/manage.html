@@ -32,6 +32,11 @@
                                 }
                                 document.getElementById(tabName).style.display = 'block';
                                 e.className += ' is-active';
+                                
+                                // Load user list when opening user tab
+                                if (tabName === 'userTab') {
+                                    loadUserList();
+                                }
                             }
                         </script>
                         <article class="media">
@@ -263,11 +268,11 @@
                                             </script>
                                             {{end}}
                                         </div>
-                                            {{if .isAdmin}}
+                                        {{if .isAdmin}}
                                             <div id="userTab" class="content-tab" style="display: none;">
-                                            {{else}}
+                                        {{else}}
                                             <div id="userTab" class="content-tab" style="display: block;">
-                                            {{end}}
+                                        {{end}}
                                             <h3>我的账户</h3>
                                             <div class="columns">
                                                 <div class="column">
@@ -329,28 +334,10 @@
                                                     </a>
                                                 </p>
                                             </div>
-                                            <h3>管理用户</h3>
-                                            <div class="field has-addons">
-                                                <p class="control">
-                                                    <span class="select">
-                                                      <select id="manageAction">
-                                                        <option value="disable">封禁用户</option>
-                                                        <option value="enable">解封用户</option>
-                                                        <option value="delete">删除用户</option>
-                                                        <option value="promote">提升为管理员</option>
-                                                        <option value="demote">降级为普通用户</option>
-                                                      </select>
-                                                    </span>
-                                                </p>
-                                                <p class="control">
-                                                    <input class="input" type="text" placeholder="用户名"
-                                                           id="manageUserName">
-                                                </p>
-                                                <p class="control">
-                                                    <a class="button" onclick="manageUser()">
-                                                        提交
-                                                    </a>
-                                                </p>
+                                            
+                                            <h3>用户列表</h3>
+                                            <div id="userListContainer">
+                                                <p class="has-text-grey">正在加载用户列表...</p>
                                             </div>
                                             {{end}}
                                         </div>

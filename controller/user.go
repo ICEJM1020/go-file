@@ -210,3 +210,19 @@ func GenerateNewUserToken(c *gin.Context) {
 	})
 	return
 }
+
+// GetAllUsers returns all users (admin only)
+func GetAllUsers(c *gin.Context) {
+	users, err := model.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "获取用户列表失败: " + err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    users,
+	})
+}

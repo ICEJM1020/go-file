@@ -320,3 +320,60 @@ span.line {
     align-items: center;
     justify-content: center;
 }
+
+/* Drop zone styles for file upload */
+.drop-zone {
+    border: 2px dashed #dbdbdb;
+    border-radius: 6px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.drop-zone:hover {
+    border-color: #3273dc;
+    background-color: #f0f7ff;
+}
+
+.drop-zone.drag-over {
+    border-color: #23d160;
+    background-color: #f0fff4;
+    transform: scale(1.02);
+}
+
+.drop-zone-content {
+    pointer-events: none;
+}
+
+.drop-zone .icon {
+    color: #b5b5b5;
+}
+
+.drop-zone:hover .icon {
+    color: #3273dc;
+}
+
+/* User management table styles */
+.user-table {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.user-table th,
+.user-table td {
+    vertical-align: middle;
+}
+
+.user-table .tag {
+    margin-right: 0.5rem;
+}
+
+.user-table .buttons {
+    justify-content: flex-end;
+}
+
+.user-table .button {
+    margin-left: 0.25rem;
+}

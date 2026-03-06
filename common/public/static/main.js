@@ -4,6 +4,17 @@ function showUploadModal() {
     if (location.href.split('/')[3].startsWith("explorer")) {
         let path = getPathParam();
         document.getElementById('uploadFileDialogTitle').innerText = `上传文件到 "${path}"`;
+    } else {
+        document.getElementById('uploadFileDialogTitle').innerText = '拖拽文件到下方区域或点击选择文件';
+    }
+    // Reset drop zone and upload button
+    const dropZone = document.getElementById('dropZone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-over');
+    }
+    const uploadBtn = document.getElementById('uploadBtn');
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
     }
     showModal('uploadModal');
 }
@@ -21,6 +32,12 @@ function getPathParam() {
 
 function closeUploadModal() {
     document.getElementById('uploadModal').className = "modal";
+    // Reset file input
+    document.getElementById('fileInput').value = '';
+    const uploadBtn = document.getElementById('uploadBtn');
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+    }
 }
 
 
@@ -33,7 +50,12 @@ function closeModal(id) {
 }
 
 function onChooseBtnClicked(e) {
-    document.getElementById('fileInput').click();
+    // Prevent triggering when clicking the drop zone itself (not its children)
+    if (e.target.closest('.drop-zone-content')) {
+        document.getElementById('fileInput').click();
+    } else if (e.target.classList.contains('drop-zone')) {
+        document.getElementById('fileInput').click();
+    }
     e.preventDefault();
 }
 
@@ -97,10 +119,17 @@ function updateDownloadCounter(id) {
 function onFileInputChange() {
     let prompt;
     let files = document.getElementById('fileInput').files;
-    if (files.length === 1) {
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (files.length === 0) {
+        prompt = '拖拽文件到下方区域或点击选择文件';
+        if (uploadBtn) uploadBtn.disabled = true;
+    } else if (files.length === 1) {
         prompt = '已选择文件: ' + files[0].name;
+        if (uploadBtn) uploadBtn.disabled = false;
     } else {
         prompt = `已选择 ${files.length} 个文件`;
+        if (uploadBtn) uploadBtn.disabled = false;
     }
     document.getElementById('uploadFileDialogTitle').innerText = prompt;
 }
@@ -116,27 +145,30 @@ function uploadFile() {
     let fileUploadTitle = document.getElementById('fileUploadTitle');
     let fileUploadProgress = document.getElementById('fileUploadProgress');
     let fileUploadDetail = document.getElementById('fileUploadDetail');
-    fileUploadCard.style.display = 'block';
     let files = document.getElementById('fileInput').files;
-    let description = document.getElementById("fileUploadDescription").value;
-    if (files.length === 0 && description === "") {
+    
+    if (files.length === 0) {
+        showToast('请先选择文件', 'warning');
         return;
     }
-    closeUploadModal();
+    
+    // Create FormData BEFORE closing modal (which clears the file input)
     let formData = new FormData();
     for (let i = 0; i < files.length; i++) {
         formData.append("file", files[i]);
     }
-    formData.append("description", description);
-
+    
     let path = "";
     if (location.href.split('/')[3].startsWith("explorer")) {
         path = getPathParam();
     }
     formData.append("path", path);
-
+    
+    // Now close the modal
+    closeUploadModal();
+    fileUploadCard.style.display = 'block';
+    
     fileUploadTitle.innerText = `正在上传 ${files.length} 个文件`;
-
     let fileUploader = new XMLHttpRequest();
     fileUploader.upload.addEventListener("progress", ev => {
         let percent = (ev.loaded / ev.total) * 100;
@@ -171,13 +203,32 @@ function uploadFile() {
 
 function dropHandler(ev) {
     ev.preventDefault();
-    document.getElementById('fileInput').files = ev.dataTransfer.files;
-    onFileInputChange();
+    const dropZone = document.getElementById('dropZone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-over');
+    }
+    
+    if (ev.dataTransfer.files && ev.dataTransfer.files.length > 0) {
+        document.getElementById('fileInput').files = ev.dataTransfer.files;
+        onFileInputChange();
+        showToast(`已选择 ${ev.dataTransfer.files.length} 个文件，点击上传按钮开始上传`, 'success');
+    }
 }
 
 function dragOverHandler(ev) {
-    document.getElementById('uploadFileDialogTitle').innerText = "释放文件至此对话框";
     ev.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    if (dropZone) {
+        dropZone.classList.add('drag-over');
+    }
+}
+
+function dragLeaveHandler(ev) {
+    ev.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-over');
+    }
 }
 
 function imageDropHandler(ev) {
@@ -414,15 +465,15 @@ async function createUser() {
     let result = await response.json();
     if (result.success) {
         showToast(`添加用户成功`, "success");
+        // Reload user list after creating new user
+        loadUserList();
     } else {
         showToast(`添加用户失败：${result.message}`, "danger");
     }
 }
 
-async function manageUser() {
-    let username = document.getElementById("manageUserName").value;
-    let action = document.getElementById("manageAction").value;
-    if (!username) return;
+async function manageUser(username, action) {
+    if (!username || !action) return;
 
     let data = {
         username: username,
@@ -438,8 +489,104 @@ async function manageUser() {
     let result = await response.json();
     if (result.success) {
         showToast(`操作成功`, "success");
+        // Reload user list after managing user
+        loadUserList();
     } else {
         showToast(`操作失败：${result.message}`, "danger");
+    }
+}
+
+// New function to load all users
+async function loadUserList() {
+    const userListContainer = document.getElementById('userListContainer');
+    if (!userListContainer) return;
+    
+    try {
+        let response = await fetch("/api/users");
+        let result = await response.json();
+        
+        if (result.success && result.data) {
+            renderUserList(result.data);
+        } else {
+            userListContainer.innerHTML = '<p class="has-text-danger">加载用户列表失败</p>';
+        }
+    } catch (e) {
+        console.error(e);
+        userListContainer.innerHTML = '<p class="has-text-danger">加载用户列表失败</p>';
+    }
+}
+
+// New function to render user list table
+function renderUserList(users) {
+    const userListContainer = document.getElementById('userListContainer');
+    if (!userListContainer) return;
+    
+    if (users.length === 0) {
+        userListContainer.innerHTML = '<p class="has-text-grey">暂无用户</p>';
+        return;
+    }
+    
+    let html = `
+    <table class="table user-table is-striped is-fullwidth">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>显示名称</th>
+                <th>角色</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    users.forEach(user => {
+        const roleText = user.role === 10 ? '管理员' : '普通用户';
+        const roleClass = user.role === 10 ? 'is-danger' : 'is-info';
+        const statusText = user.status === 1 ? '正常' : '已禁用';
+        const statusClass = user.status === 1 ? 'is-success' : 'is-warning';
+        
+        html += `
+        <tr>
+            <td>${user.id}</td>
+            <td>${escapeHtml(user.username)}</td>
+            <td>${escapeHtml(user.displayName || '-')}</td>
+            <td><span class="tag ${roleClass}">${roleText}</span></td>
+            <td><span class="tag ${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="buttons are-small">
+                    ${user.status === 1 ? 
+                        `<button class="button is-warning" onclick="manageUser('${user.username}', 'disable')">禁用</button>` :
+                        `<button class="button is-success" onclick="manageUser('${user.username}', 'enable')">启用</button>`
+                    }
+                    ${user.role === 1 ? 
+                        `<button class="button is-danger" onclick="manageUser('${user.username}', 'promote')">提升管理员</button>` :
+                        `<button class="button is-info" onclick="manageUser('${user.username}', 'demote')">降级</button>`
+                    }
+                    <button class="button is-danger is-outlined" onclick="confirmDeleteUser('${user.username}')">删除</button>
+                </div>
+            </td>
+        </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    userListContainer.innerHTML = html;
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Confirm before deleting user
+function confirmDeleteUser(username) {
+    if (confirm(`确定要删除用户 "${username}" 吗？此操作不可恢复！`)) {
+        manageUser(username, 'delete');
     }
 }
 
@@ -525,6 +672,11 @@ function init() {
     hiddenTextArea.setAttribute("id", "hiddenTextArea");
     hiddenTextArea.style.cssText = "height: 0px; width: 0px";
     document.body.appendChild(hiddenTextArea);
+    
+    // Load user list if on manage page
+    if (document.getElementById('userListContainer')) {
+        loadUserList();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init)
